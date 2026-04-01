@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alpha Edge — Pre-Market Intelligence Brief — {{ report_date }}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── CSS Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+
+/* ── CSS Variables (Phosphor Terminal Theme) ── */
+:root{
+  --void:#060B18;
+  --abyss:#0B1120;
+  --deep:#101828;
+  --surface:#151E30;
+  --surface-2:#1A2540;
+  --border-dim:#1E2A45;
+  --border:#253050;
+  --border-bright:#304070;
+  --text-primary:#E8ECF4;
+  --text-secondary:#8892A8;
+  --text-dim:#5A6580;
+  --phosphor:#00E87B;
+  --phosphor-dim:rgba(0,232,123,0.12);
+  --phosphor-glow:rgba(0,232,123,0.25);
+  --danger:#FF4757;
+  --danger-dim:rgba(255,71,87,0.12);
+  --amber:#FFB84D;
+  --amber-dim:rgba(255,184,77,0.12);
+  --ice:#4DC9F6;
+  --ice-dim:rgba(77,201,246,0.12);
+  --violet:#A78BFA;
+  --violet-dim:rgba(167,139,250,0.12);
+  --rose:#F472B6;
+  --rose-dim:rgba(244,114,182,0.12);
+  --mono:'IBM Plex Mono','Menlo',monospace;
+  --serif:'Instrument Serif',Georgia,serif;
+  --sans:'Libre Franklin','Helvetica Neue',sans-serif;
+}
+
+body{
+  background:var(--void);
+  color:var(--text-primary);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+
+/* ── Noise Texture Overlay ── */
+body::before{
+  content:'';
+  position:fixed;
+  top:0;left:0;width:100%;height:100%;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:9999;
+}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 8px rgba(0,232,123,0.2)}50%{box-shadow:0 0 20px rgba(0,232,123,0.5)}}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes slideRight{from{width:0}to{width:100%}}
+
+.fade-up{animation:fadeUp 0.5s ease both}
+.fade-up-1{animation-delay:0.05s}
+.fade-up-2{animation-delay:0.1s}
+.fade-up-3{animation-delay:0.15s}
+.fade-up-4{animation-delay:0.2s}
+.fade-up-5{animation-delay:0.25s}
+
+/* ── Masthead (sticky) ── */
+.masthead{
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:var(--void);
+  border-bottom:1px solid var(--border-dim);
+  padding:12px 0;
+}
+.masthead-inner{
+  max-width:1480px;
+  margin:0 auto;
+  padding:0 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.masthead-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.masthead-mark{
+  width:10px;height:10px;
+  border-radius:50%;
+  background:var(--phosphor);
+  animation:pulseGlow 2s infinite;
+}
+.masthead-name{
+  font-family:var(--serif);
+  font-size:22px;
+  color:var(--phosphor);
+  letter-spacing:-0.5px;
+}
+.masthead-sub{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text-dim);
+  margin-left:8px;
+}
+.masthead-pills{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.masthead-meta{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text-dim);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--phosphor);
+  display:inline-block;
+  animation:blink 1.5s infinite;
+}
+
+/* ── Pills ── */
+.pill{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:500;
+  padding:4px 10px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  color:var(--text-secondary);
+  background:var(--surface);
+  white-space:nowrap;
+}
+.pill-green{color:var(--phosphor);border-color:var(--phosphor-glow)}
+.pill-red{color:var(--danger);border-color:rgba(255,71,87,0.3)}
+.pill-amber{color:var(--amber);border-color:rgba(255,184,77,0.3);animation:pulseGlow 2s infinite}
+.pill-ice{color:var(--ice);border-color:rgba(77,201,246,0.3)}
+
+/* ── Hero ── */
+.hero{
+  background:radial-gradient(ellipse at 50% 0%, rgba(0,232,123,0.04) 0%, transparent 70%);
+  padding:40px 0 32px;
+}
+.hero-inner{
+  max-width:1480px;
+  margin:0 auto;
+  padding:0 24px;
+}
+.hero-date{
+  font-family:var(--serif);
+  font-size:42px;
+  color:var(--text-primary);
+  margin-bottom:4px;
+  letter-spacing:-1px;
+}
+.hero-tagline{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text-dim);
+  margin-bottom:24px;
+}
+.hero-mood{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:12px;
+  margin-bottom:20px;
+}
+
+/* ── Mood Cards ── */
+.mood-card{
+  background:var(--deep);
+  border:1px solid var(--border-dim);
+  border-radius:10px;
+  padding:12px;
+  position:relative;
+  overflow:hidden;
+}
+.mc-label{
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:600;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin-bottom:4px;
+}
+.mc-value{
+  font-family:var(--mono);
+  font-size:18px;
+  font-weight:700;
+  color:var(--text-primary);
+  margin-bottom:2px;
+}
+.mc-delta{
+  font-family:var(--mono);
+  font-size:10px;
+  margin-bottom:8px;
+}
+.mc-up{color:var(--phosphor)}
+.mc-down{color:var(--danger)}
+.mc-flat{color:var(--amber)}
+.mc-spark{height:32px}
+
+/* ── Score Bar ── */
+.score-bar{
+  background:var(--deep);
+  border:1px solid var(--border-dim);
+  border-radius:10px;
+  padding:16px 20px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.score-label{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  white-space:nowrap;
+}
+.score-track{
+  flex:1;
+  height:8px;
+  background:var(--surface-2);
+  border-radius:4px;
+  overflow:hidden;
+}
+.score-fill{
+  height:100%;
+  border-radius:4px;
+  transition:width 1s ease;
+}
+.score-val{
+  font-family:var(--mono);
+  font-size:16px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+/* ── Main ── */
+.main{
+  max-width:1480px;
+  margin:0 auto;
+  padding:0 24px 60px;
+}
+
+/* ── Section Container ── */
+.sect{
+  background:var(--abyss);
+  border:1px solid var(--border-dim);
+  border-radius:14px;
+  padding:24px;
+  margin-bottom:20px;
+}
+.sect-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:18px;
+}
+.sect-num{
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:700;
+  color:var(--void);
+  background:var(--phosphor);
+  padding:3px 8px;
+  border-radius:4px;
+  letter-spacing:1px;
+}
+.sect-title{
+  font-family:var(--serif);
+  font-size:20px;
+  color:var(--text-primary);
+  letter-spacing:-0.3px;
+  flex:1;
+}
+.sect-title em{font-style:italic}
+.sect-badge{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:500;
+  padding:4px 10px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  color:var(--text-secondary);
+  background:var(--surface);
+  white-space:nowrap;
+  margin-left:auto;
+}
+.sect-body{/* content area inside section */}
+
+/* ── S01 Narrative ── */
+.narrative{
+  font-family:var(--serif);
+  font-size:28px;
+  color:var(--text-primary);
+  margin-bottom:16px;
+  letter-spacing:-0.5px;
+  line-height:1.3;
+}
+.hl-g{color:var(--phosphor)}
+.hl-r{color:var(--danger)}
+.hl-a{color:var(--amber)}
+.hl-b{color:var(--ice)}
+.nar-bullets{
+  list-style:none;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:18px;
+}
+.nar-b{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-secondary);
+  line-height:1.5;
+}
+.nar-icon{
+  width:22px;height:22px;
+  border-radius:5px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:10px;
+  font-weight:700;
+  flex-shrink:0;
+  margin-top:1px;
+}
+.nar-icon.m{background:var(--phosphor-dim);color:var(--phosphor)}
+.nar-icon.f{background:var(--ice-dim);color:var(--ice)}
+.nar-icon.r{background:var(--danger-dim);color:var(--danger)}
+.nar-icon.e{background:var(--amber-dim);color:var(--amber)}
+
+/* ── S02 Levels ── */
+.levels-duo{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.lvl-card{
+  background:var(--deep);
+  border:1px solid var(--border-dim);
+  border-radius:10px;
+  padding:18px;
+}
+.lvl-card h3{
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:600;
+  color:var(--phosphor);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin-bottom:12px;
+}
+.lvl-row{
+  display:flex;
+  justify-content:space-between;
+  padding:5px 0;
+  font-family:var(--mono);
+  font-size:12px;
+  border-bottom:1px solid var(--border-dim);
+}
+.lvl-row:last-child{border-bottom:none}
+.lvl-lbl{color:var(--text-dim)}
+.lvl-val{color:var(--text-primary);font-weight:500}
+.lvl-highlight{font-weight:700}
+
+/* ── S03 Gap-Up Setups ── */
+.stock-cards{display:flex;flex-direction:column;gap:14px}
+.stk{
+  background:var(--deep);
+  border:1px solid var(--border-dim);
+  border-radius:10px;
+  padding:18px;
+}
+.stk-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:12px;
+}
+.stk-id{display:flex;align-items:center;gap:10px}
+.stk-rank{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:700;
+  color:var(--void);
+  background:var(--phosphor);
+  width:22px;height:22px;
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.stk-ticker{
+  font-family:var(--mono);
+  font-size:16px;
+  font-weight:700;
+  color:var(--text-primary);
+}
+.stk-co{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text-dim);
+}
+.stk-gap{
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:600;
+  padding:4px 10px;
+  border-radius:6px;
+}
+.stk-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin:8px 0;
+}
+.stk-block{
+  background:var(--surface);
+  border-radius:6px;
+  padding:8px;
+  text-align:center;
+}
+.stk-block .stk-lbl{font-family:var(--mono);font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
+.stk-block .stk-val{font-family:var(--mono);font-size:13px;font-weight:600}
+
+/* ── Pattern Box ── */
+.pattern-box{
+  margin-top:10px;
+  padding:10px 12px;
+  background:var(--surface);
+  border-radius:6px;
+  font-family:var(--mono);
+  font-size:11px;
+}
+.pat-icon{color:var(--ice);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.pat-body{}
+.pat-hl{color:var(--text-primary);font-weight:600}
+.pat-detail{color:var(--text-secondary);margin-top:4px;font-size:10px}
+.pat-stats{display:flex;gap:16px;margin-top:6px}
+.pat-s{color:var(--text-secondary)}
+.pat-s strong{color:var(--text-primary)}
+
+/* ── Tags ── */
+.tag{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:600;
+  padding:2px 8px;
+  border-radius:4px;
+  display:inline-block;
+}
+.tag-g{background:var(--phosphor-dim);color:var(--phosphor)}
+.tag-r{background:var(--danger-dim);color:var(--danger)}
+.tag-a{background:var(--amber-dim);color:var(--amber)}
+.tag-b{background:var(--ice-dim);color:var(--ice)}
+.tag-v{background:var(--violet-dim);color:var(--violet)}
+
+/* ── S04 Sector Rotation ── */
+.sector-dual{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sflow-list{display:flex;flex-direction:column;gap:8px}
+.sf-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-family:var(--mono);
+  font-size:12px;
+}
+.sf-name{color:var(--text-secondary);width:100px;flex-shrink:0}
+.sf-bar{flex:1;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.sf-bar-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+.sf-val{width:80px;text-align:right;font-weight:600}
+
+/* ── S05 Contagion ── */
+.contagion-flow{display:flex;flex-direction:column;gap:16px;margin-bottom:16px}
+.cg-order{margin-bottom:4px}
+.cg-label{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin-bottom:8px;
+}
+.cg-dot{
+  width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;
+}
+.cg-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-secondary);
+}
+.cg-arrow{
+  text-align:center;
+  font-size:18px;
+  color:var(--text-dim);
+  padding:4px 0;
+}
+
+/* ── S06 Options Flow Table ── */
+.tbl{width:100%;border-collapse:collapse;margin-bottom:14px}
+.tbl th{
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:600;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  padding:8px 10px;
+  text-align:left;
+  border-bottom:1px solid var(--border-dim);
+}
+.tbl td{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-secondary);
+  padding:8px 10px;
+  border-bottom:1px solid var(--border-dim);
+}
+.tbl tr:last-child td{border-bottom:none}
+.signal-dot{
+  width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;
+}
+
+/* ── S07 Correlation ── */
+.corr-container{overflow-x:auto;margin-bottom:14px}
+.corr-table{border-collapse:collapse;width:100%}
+.corr-table th{
+  font-family:var(--mono);
+  font-size:9px;
+  color:var(--text-dim);
+  padding:6px;
+  text-align:center;
+  font-weight:500;
+}
+.corr-table td{
+  font-family:var(--mono);
+  font-size:10px;
+  text-align:center;
+  padding:6px;
+  min-width:50px;
+  border-radius:3px;
+}
+
+/* ── S08 Block Deals ── */
+.block-grid{display:flex;flex-direction:column;gap:8px}
+.block-item{
+  background:var(--surface);
+  border-radius:8px;
+  padding:12px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.b-ticker{
+  font-family:var(--mono);
+  font-size:14px;
+  font-weight:600;
+  color:var(--text-primary);
+}
+.b-detail{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text-secondary);
+  margin-top:2px;
+}
+.b-qty{font-family:var(--mono);font-size:11px;color:var(--text-secondary)}
+.b-price{font-family:var(--mono);font-size:11px;color:var(--text-secondary)}
+.b-type{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:600;
+  padding:3px 8px;
+  border-radius:4px;
+  background:var(--violet-dim);
+  color:var(--violet);
+}
+
+/* ── S09 Gap Stats ── */
+.gap-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.gap-stat-panel{
+  background:var(--surface);
+  border-radius:8px;
+  padding:12px;
+  text-align:center;
+}
+
+/* ── S10 Sentiment ── */
+.senti-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.senti-panel{
+  background:var(--deep);
+  border:1px solid var(--border-dim);
+  border-radius:10px;
+  padding:16px;
+}
+.senti-panel h4{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:600;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin-bottom:12px;
+}
+.si{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:6px 0;
+  font-family:var(--mono);
+  font-size:12px;
+  border-bottom:1px solid var(--border-dim);
+}
+.si:last-child{border-bottom:none}
+.si-name{color:var(--text-primary)}
+.si-count{color:var(--text-secondary);font-size:10px}
+.si-meter{width:60px;height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+.si-meter-fill{height:100%;border-radius:2px}
+
+/* ── TV Analyst ── */
+.tv-item{
+  padding:10px 12px;
+  background:var(--surface);
+  border-radius:6px;
+  margin-bottom:8px;
+  font-family:var(--mono);
+  font-size:12px;
+}
+.tv-analyst{color:var(--text-primary);font-weight:600}
+.tv-call{
+  font-size:10px;
+  font-weight:600;
+  padding:2px 8px;
+  border-radius:4px;
+  display:inline-block;
+}
+.tv-conflict{
+  margin-top:6px;
+  padding:6px 10px;
+  background:rgba(255,71,87,0.08);
+  border-radius:4px;
+  border-left:2px solid var(--danger);
+  font-size:11px;
+  color:var(--danger);
+}
+
+/* ── S11 Avoid List ── */
+.avoid-list{display:flex;flex-direction:column;gap:10px}
+.avoid-item{
+  background:var(--deep);
+  border:1px solid rgba(255,71,87,0.2);
+  border-radius:10px;
+  padding:14px 16px;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+}
+.avoid-ticker{
+  font-family:var(--mono);
+  font-size:13px;
+  font-weight:600;
+  color:var(--danger);
+}
+.avoid-reason{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text-secondary);
+  margin-top:2px;
+}
+.avoid-flag{
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:600;
+  color:var(--amber);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-top:4px;
+}
+
+/* ── S12 Expiry ── */
+.exp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.exp-card{
+  background:var(--surface);
+  border-radius:8px;
+  padding:12px;
+  text-align:center;
+}
+.exp-val{font-family:var(--mono);font-size:18px;font-weight:700;margin-top:2px}
+.exp-lbl{font-family:var(--mono);font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
+
+/* ── S13 FII/DII ── */
+.flow-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.flow-card{
+  background:var(--surface);
+  border-radius:8px;
+  padding:12px;
+  text-align:center;
+}
+.fc-label{font-family:var(--mono);font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
+.fc-value{font-family:var(--mono);font-size:16px;font-weight:700;margin-top:2px}
+.fc-sub{font-family:var(--mono);font-size:10px;color:var(--text-secondary);margin-top:2px}
+
+/* ── S14 Scenarios ── */
+.scenario-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.scenario{
+  background:var(--deep);
+  border:1px solid var(--border-dim);
+  border-radius:10px;
+  padding:18px;
+  border-top:3px solid var(--phosphor);
+}
+.scenario-label{
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin-bottom:8px;
+}
+.scenario-prob{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text-dim);
+  margin-bottom:10px;
+}
+.scenario-desc{margin-bottom:10px}
+.scenario-actions{margin-bottom:10px}
+.scenario-desc .sc-lbl,
+.scenario-actions .sc-lbl{
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:600;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-bottom:4px;
+}
+.scenario-desc .sc-txt,
+.scenario-actions .sc-txt{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-secondary);
+  line-height:1.5;
+}
+
+/* ── S15 Watchlist ── */
+.wq-timeline{display:flex;flex-direction:column;gap:12px}
+.wq-item{
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+}
+.wq-time{
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:600;
+  color:var(--text-dim);
+  width:52px;
+  flex-shrink:0;
+  padding-top:2px;
+}
+.wq-content{flex:1}
+.wq-content .wq-title{
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:600;
+  color:var(--text-primary);
+  margin-bottom:2px;
+}
+.wq-content .wq-desc{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text-secondary);
+  line-height:1.5;
+}
+.wq-dot{
+  width:10px;height:10px;
+  border-radius:50%;
+  background:var(--border);
+  flex-shrink:0;
+  margin-top:5px;
+}
+.wq-item.critical .wq-dot{background:var(--danger);box-shadow:0 0 8px rgba(255,71,87,0.4)}
+.wq-item.high .wq-dot{background:var(--amber)}
+
+/* ── S16 Events ── */
+.ev-timeline{display:flex;flex-direction:column;gap:10px}
+.ev-item{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  padding:10px 14px;
+  background:var(--surface);
+  border-radius:8px;
+}
+.ev-time{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text-dim);
+  flex-shrink:0;
+  width:44px;
+}
+.ev-text{flex:1}
+.ev-text .ev-title{
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:600;
+  color:var(--text-primary);
+}
+.ev-text .ev-desc{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text-secondary);
+  margin-top:2px;
+}
+.ev-item.hi{border-left:2px solid var(--danger)}
+.ev-item.med{border-left:2px solid var(--amber)}
+
+/* ── S17 Risk Sizing ── */
+.risk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.risk-cell{
+  background:var(--surface);
+  border-radius:8px;
+  padding:14px;
+  text-align:center;
+}
+.risk-v{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text-primary);margin-top:4px}
+.risk-l{font-family:var(--mono);font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
+
+/* ── Chart Wrap ── */
+.chart-wrap{height:250px;position:relative}
+
+/* ── Report Footer ── */
+.report-footer{
+  text-align:center;
+  padding:28px 0;
+  border-top:1px solid var(--border-dim);
+  margin-top:32px;
+}
+.report-footer .rf-brand{
+  font-family:var(--serif);
+  font-size:18px;
+  color:var(--phosphor);
+  margin-bottom:6px;
+}
+.report-footer .rf-stats{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text-dim);
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+/* ── Responsive ── */
+@media(max-width:1100px){
+  .hero-mood{grid-template-columns:repeat(3,1fr)}
+  .scenario-cards{grid-template-columns:1fr}
+  .levels-duo,.senti-grid,.gap-stats-grid,.sector-dual{grid-template-columns:1fr}
+  .exp-grid,.flow-row,.risk-row{grid-template-columns:repeat(2,1fr)}
+  .stk-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:800px){
+  .hero-mood{grid-template-columns:repeat(2,1fr)}
+  .masthead-inner{flex-direction:column;gap:10px;align-items:flex-start}
+  .hero-date{font-size:28px}
+  .hero-inner,.main,.masthead-inner{padding:0 14px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ MASTHEAD ═══════════════════════ -->
+<header class="masthead fade-up">
+  <div class="masthead-inner">
+    <div class="masthead-brand">
+      <span class="masthead-mark"></span>
+      <span class="masthead-name">Alpha Edge</span>
+      <span class="masthead-sub"><span class="live-dot"></span> LIVE {{ generated_at }}</span>
+    </div>
+    <div class="masthead-pills">
+      {% for pill in masthead_pills %}
+      <span class="pill {{ pill.class }}">{{ pill.label }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════ HERO ═══════════════════════ -->
+<div class="hero fade-up fade-up-1">
+  <div class="hero-inner">
+    <div class="hero-date">{{ report_date_long }}</div>
+    <div class="hero-tagline">Pre-Market Intelligence Brief &bull; {{ signal_count }} actionable signals detected</div>
+
+    <div class="hero-mood">
+      {% for card in macro_cards %}
+      <div class="mood-card">
+        <div class="mc-label">{{ card.label }}</div>
+        <div class="mc-value">{{ card.value }}</div>
+        <div class="mc-delta mc-{{ card.direction }}">{{ card.delta }} {{ card.pct }}{% if not card.fresh %} <span style="color:var(--amber)" title="Stale data">&#9888;</span>{% endif %}</div>
+        <div class="mc-spark"><canvas id="{{ card.canvas_id }}"></canvas></div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="score-bar">
+      <div class="score-label">Market Mood</div>
+      <div class="score-track">
+        <div class="score-fill" style="width:{{ confidence_score }}%;background:{{ confidence_gradient }}"></div>
+      </div>
+      <div class="score-val" style="color:{{ confidence_color }}">{{ confidence_score }}/100</div>
+      <span class="score-label">{{ confidence_label }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MAIN CONTENT ═══════════════════════ -->
+<div class="main">
+
+<!-- ═══════════════════════ S01 — NARRATIVE ═══════════════════════ -->
+<div class="sect fade-up fade-up-2">
+  <div class="sect-head">
+    <span class="sect-num">S01</span>
+    <span class="sect-title">Market <em>Narrative</em></span>
+  </div>
+  <div class="sect-body">
+    {% if narrative_headline %}
+    <div class="narrative">{{ narrative_headline }}</div>
+    <div style="font-size:14px;color:var(--text-secondary);line-height:1.75;margin-bottom:18px">{{ narrative_body | safe }}</div>
+    {% if narrative_bullets %}
+    <ul class="nar-bullets">
+      {% for bullet in narrative_bullets %}
+      <li class="nar-b">
+        <div class="nar-icon {{ bullet.icon | lower }}">{{ bullet.icon }}</div>
+        <span>{{ bullet.text }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% else %}
+    <div style="color:var(--text-dim);font-style:italic;font-family:var(--mono);font-size:12px">AI narrative unavailable. Data sections below are fully functional.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S02 — LEVELS ═══════════════════════ -->
+<div class="sect fade-up fade-up-3">
+  <div class="sect-head">
+    <span class="sect-num">S02</span>
+    <span class="sect-title">Key <em>Levels</em></span>
+  </div>
+  <div class="sect-body">
+    <div class="levels-duo">
+      <!-- Nifty -->
+      <div class="lvl-card">
+        <h3>Nifty 50</h3>
+        <div class="lvl-row"><span class="lvl-lbl">Prev Close</span><span class="lvl-val">{{ "%.1f" | format(nifty_levels.prev_close) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">Expected Open</span><span class="lvl-val lvl-highlight" style="color:var(--amber)">{{ "%.1f" | format(nifty_levels.expected_open) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">Pivot</span><span class="lvl-val">{{ "%.1f" | format(nifty_levels.pivot) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">R1</span><span class="lvl-val" style="color:var(--phosphor)">{{ "%.1f" | format(nifty_levels.r1) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">R2</span><span class="lvl-val" style="color:var(--phosphor)">{{ "%.1f" | format(nifty_levels.r2) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">R3</span><span class="lvl-val" style="color:var(--phosphor)">{{ "%.1f" | format(nifty_levels.r3) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">S1</span><span class="lvl-val" style="color:var(--danger)">{{ "%.1f" | format(nifty_levels.s1) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">S2</span><span class="lvl-val" style="color:var(--danger)">{{ "%.1f" | format(nifty_levels.s2) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">S3</span><span class="lvl-val" style="color:var(--danger)">{{ "%.1f" | format(nifty_levels.s3) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">VWAP</span><span class="lvl-val" style="color:var(--amber)">{{ "%.1f" | format(nifty_levels.vwap) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">ATR(14)</span><span class="lvl-val">{{ "%.1f" | format(nifty_levels.atr) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">RSI(14)</span><span class="lvl-val">{{ "%.1f" | format(nifty_levels.rsi) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">20 DMA</span><span class="lvl-val">{{ "%.1f" | format(nifty_levels.dma_20) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">50 DMA</span><span class="lvl-val">{{ "%.1f" | format(nifty_levels.dma_50) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">200 DMA</span><span class="lvl-val">{{ "%.1f" | format(nifty_levels.dma_200) }}</span></div>
+      </div>
+      <!-- BankNifty -->
+      <div class="lvl-card">
+        <h3>Bank Nifty</h3>
+        <div class="lvl-row"><span class="lvl-lbl">Prev Close</span><span class="lvl-val">{{ "%.1f" | format(banknifty_levels.prev_close) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">Expected Open</span><span class="lvl-val lvl-highlight" style="color:var(--amber)">{{ "%.1f" | format(banknifty_levels.expected_open) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">Pivot</span><span class="lvl-val">{{ "%.1f" | format(banknifty_levels.pivot) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">R1</span><span class="lvl-val" style="color:var(--phosphor)">{{ "%.1f" | format(banknifty_levels.r1) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">R2</span><span class="lvl-val" style="color:var(--phosphor)">{{ "%.1f" | format(banknifty_levels.r2) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">R3</span><span class="lvl-val" style="color:var(--phosphor)">{{ "%.1f" | format(banknifty_levels.r3) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">S1</span><span class="lvl-val" style="color:var(--danger)">{{ "%.1f" | format(banknifty_levels.s1) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">S2</span><span class="lvl-val" style="color:var(--danger)">{{ "%.1f" | format(banknifty_levels.s2) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">S3</span><span class="lvl-val" style="color:var(--danger)">{{ "%.1f" | format(banknifty_levels.s3) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">VWAP</span><span class="lvl-val" style="color:var(--amber)">{{ "%.1f" | format(banknifty_levels.vwap) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">ATR(14)</span><span class="lvl-val">{{ "%.1f" | format(banknifty_levels.atr) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">RSI(14)</span><span class="lvl-val">{{ "%.1f" | format(banknifty_levels.rsi) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">20 DMA</span><span class="lvl-val">{{ "%.1f" | format(banknifty_levels.dma_20) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">50 DMA</span><span class="lvl-val">{{ "%.1f" | format(banknifty_levels.dma_50) }}</span></div>
+        <div class="lvl-row"><span class="lvl-lbl">200 DMA</span><span class="lvl-val">{{ "%.1f" | format(banknifty_levels.dma_200) }}</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ S03 — GAP-UP SETUPS ═══════════════════════ -->
+<div class="sect fade-up fade-up-3">
+  <div class="sect-head">
+    <span class="sect-num">S03</span>
+    <span class="sect-title">Gap-Up <em>Setups</em></span>
+    {% if gap_up_stocks %}<span class="sect-badge">{{ gap_up_stocks | length }} candidates</span>{% endif %}
+  </div>
+  <div class="sect-body">
+    {% if gap_up_stocks %}
+    <div class="stock-cards">
+      {% for stock in gap_up_stocks %}
+      <div class="stk">
+        <div class="stk-top">
+          <div class="stk-id">
+            <div class="stk-rank">{{ stock.rank }}</div>
+            <div>
+              <div class="stk-ticker">{{ stock.ticker }}</div>
+              <div class="stk-co">{{ stock.company }} &mdash; {{ stock.sector }}</div>
+            </div>
+          </div>
+          <div class="stk-gap" style="{% if stock.gap_pct >= 0 %}background:var(--phosphor-dim);color:var(--phosphor){% else %}background:var(--danger-dim);color:var(--danger){% endif %}">
+            {% if stock.gap_pct >= 0 %}+{% endif %}{{ "%.1f" | format(stock.gap_pct) }}%
+          </div>
+        </div>
+
+        {% if stock.catalyst_text %}
+        <div style="font-family:var(--mono);font-size:9px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px">Catalyst</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:4px">{{ stock.catalyst_text | safe }}</div>
+        {% endif %}
+
+        <div style="font-family:var(--mono);font-size:9px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px">Flow Signals</div>
+        <div class="stk-grid">
+          <div class="stk-block">
+            <div class="stk-lbl">Options Skew</div>
+            <div class="stk-val" style="color:{% if stock.options_skew > 0 %}var(--phosphor){% elif stock.options_skew < 0 %}var(--danger){% else %}var(--text-primary){% endif %}">{{ "%+.1f" | format(stock.options_skew) }}</div>
+          </div>
+          <div class="stk-block">
+            <div class="stk-lbl">IV Rank</div>
+            <div class="stk-val">{{ stock.iv_rank }}</div>
+          </div>
+          <div class="stk-block">
+            <div class="stk-lbl">FII Hold &#916;</div>
+            <div class="stk-val" style="color:{% if stock.fii_holding_change > 0 %}var(--phosphor){% elif stock.fii_holding_change < 0 %}var(--danger){% else %}var(--text-primary){% endif %}">{{ "%+.1f" | format(stock.fii_holding_change) }}%</div>
+          </div>
+          <div class="stk-block">
+            <div class="stk-lbl">Delivery %</div>
+            <div class="stk-val">{{ "%.0f" | format(stock.delivery_pct) }}%</div>
+          </div>
+        </div>
+
+        <div style="font-family:var(--mono);font-size:9px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px">Levels</div>
+        <div class="stk-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stk-block">
+            <div class="stk-lbl">Entry Zone</div>
+            <div class="stk-val" style="color:var(--phosphor)">{{ "%.1f" | format(stock.entry_zone_low) }} - {{ "%.1f" | format(stock.entry_zone_high) }}</div>
+          </div>
+          <div class="stk-block">
+            <div class="stk-lbl">VWAP PB</div>
+            <div class="stk-val" style="color:var(--amber)">{{ "%.1f" | format(stock.vwap_pullback) }}</div>
+          </div>
+          <div class="stk-block">
+            <div class="stk-lbl">Stop Loss</div>
+            <div class="stk-val" style="color:var(--danger)">{{ "%.1f" | format(stock.stop_loss) }}</div>
+          </div>
+          <div class="stk-block">
+            <div class="stk-lbl">Target 1</div>
+            <div class="stk-val" style="color:var(--phosphor)">{{ "%.1f" | format(stock.target_1) }}</div>
+          </div>
+          <div class="stk-block">
+            <div class="stk-lbl">Target 2</div>
+            <div class="stk-val" style="color:var(--phosphor)">{{ "%.1f" | format(stock.target_2) }}</div>
+          </div>
+          <div class="stk-block">
+            <div class="stk-lbl">R:R</div>
+            <div class="stk-val" style="color:{% if stock.risk_reward >= 2 %}var(--phosphor){% elif stock.risk_reward >= 1.5 %}var(--amber){% else %}var(--danger){% endif %}">{{ "%.1f" | format(stock.risk_reward) }}x</div>
+          </div>
+        </div>
+
+        {% if stock.timing_text %}
+        <div style="font-family:var(--mono);font-size:9px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px">Timing</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-secondary);padding:8px 12px;background:var(--surface);border-radius:6px;border-left:2px solid var(--phosphor)">{{ stock.timing_text | safe }}</div>
+        {% endif %}
+
+        <div class="pattern-box">
+          {% if stock.pattern_match and stock.pattern_match.total_matches > 0 %}
+          <div class="pat-icon">&#128202; Pattern Match: {{ stock.pattern_match.total_matches }} similar setups found</div>
+          <div class="pat-body">
+            <div class="pat-stats">
+              {% if stock.pattern_match.win_rate is not none %}<div class="pat-s">Win Rate: <strong style="color:var(--phosphor)">{{ "%.0f" | format(stock.pattern_match.win_rate) }}%</strong></div>{% endif %}
+              {% if stock.pattern_match.median_upside is not none %}<div class="pat-s">Med. Upside: <strong style="color:var(--phosphor)">+{{ "%.1f" | format(stock.pattern_match.median_upside) }}%</strong></div>{% endif %}
+              {% if stock.pattern_match.median_drawdown is not none %}<div class="pat-s">Med. Drawdown: <strong style="color:var(--danger)">{{ "%.1f" | format(stock.pattern_match.median_drawdown) }}%</strong></div>{% endif %}
+            </div>
+            {% if stock.pattern_match.detail_text %}
+            <div class="pat-detail">{{ stock.pattern_match.detail_text }}</div>
+            {% endif %}
+          </div>
+          {% else %}
+          <div style="color:var(--text-dim);font-style:italic">&#128221; Building pattern history... (run backfill_history.py for pattern matching)</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:24px;color:var(--text-dim);font-family:var(--mono);font-size:12px">No gap-up candidates detected for today's session.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S04 — SECTOR ROTATION ═══════════════════════ -->
+<div class="sect fade-up fade-up-4">
+  <div class="sect-head">
+    <span class="sect-num">S04</span>
+    <span class="sect-title">Sector <em>Rotation</em></span>
+  </div>
+  <div class="sect-body">
+    <div class="chart-wrap" style="margin-bottom:16px"><canvas id="sectorChart"></canvas></div>
+    {% if sector_flows %}
+    <div class="sflow-list">
+      {% for sf in sector_flows %}
+      <div class="sf-item">
+        <span style="font-size:14px;width:20px;text-align:center">{{ sf.emoji }}</span>
+        <div class="sf-name">{{ sf.name }}</div>
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:{{ sf.bar_width }};background:{{ sf.color }}"></div></div>
+        <div class="sf-val" style="color:{{ sf.color }}">{{ sf.flow_text }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S05 — CONTAGION CHAIN ═══════════════════════ -->
+<div class="sect fade-up fade-up-4">
+  <div class="sect-head">
+    <span class="sect-num">S05</span>
+    <span class="sect-title">Contagion <em>Chain</em></span>
+    {% if contagion.catalyst %}<span class="sect-badge">{{ contagion.orders | length }} orders</span>{% endif %}
+  </div>
+  <div class="sect-body">
+    {% if contagion.catalyst %}
+    <div style="font-family:var(--mono);font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;padding:8px 12px;background:rgba(255,184,77,0.08);border-radius:6px;border-left:2px solid var(--amber)">&#9889; Catalyst: {{ contagion.catalyst }}</div>
+    <div class="contagion-flow">
+      {% for order in contagion.orders %}
+      {% if not loop.first %}
+      <div class="cg-arrow">&#8595;</div>
+      {% endif %}
+      <div class="cg-order">
+        <div class="cg-label" style="color:{{ order.color }}">{{ order.label }}</div>
+        {% for item in order["items"] %}
+        <div class="cg-item">
+          <span>{{ item.emoji }}</span>
+          <span style="color:{{ item.impact_color }};font-weight:600">{{ item.name }}</span>
+          <span>{{ item.description }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="chart-wrap" style="height:200px"><canvas id="contagionChart"></canvas></div>
+    {% else %}
+    <div style="text-align:center;padding:24px;color:var(--text-dim);font-family:var(--mono);font-size:12px">No significant contagion chains detected today.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S06 — OPTIONS FLOW ═══════════════════════ -->
+<div class="sect fade-up fade-up-4">
+  <div class="sect-head">
+    <span class="sect-num">S06</span>
+    <span class="sect-title">Options <em>Flow</em></span>
+  </div>
+  <div class="sect-body">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      <div class="gap-stat-panel">
+        <div class="exp-lbl">PCR (Near ATM)</div>
+        <div class="exp-val" style="color:{% if pcr_near_atm > 1.2 %}var(--phosphor){% elif pcr_near_atm < 0.8 %}var(--danger){% else %}var(--amber){% endif %}">{{ "%.2f" | format(pcr_near_atm) }}</div>
+      </div>
+      <div class="gap-stat-panel">
+        <div class="exp-lbl">Max Pain Nifty</div>
+        <div class="exp-val" style="color:var(--ice)">{{ "%.0f" | format(max_pain_nifty) }}</div>
+      </div>
+      <div class="gap-stat-panel">
+        <div class="exp-lbl">HV Rank</div>
+        <div class="exp-val" style="color:{% if hv_rank > 70 %}var(--danger){% elif hv_rank > 40 %}var(--amber){% else %}var(--phosphor){% endif %}">{{ hv_rank }}</div>
+      </div>
+    </div>
+
+    {% if unusual_options %}
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Stock</th>
+          <th>Strike</th>
+          <th>Type</th>
+          <th>Vol vs Avg</th>
+          <th>OI &#916;</th>
+          <th>Premium</th>
+          <th>Signal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for opt in unusual_options %}
+        <tr>
+          <td style="color:var(--text-primary);font-weight:600">{{ opt.stock }}</td>
+          <td>{{ opt.strike }}</td>
+          <td>{{ opt.option_type }}</td>
+          <td style="color:var(--amber)">{{ "%.1f" | format(opt.vol_vs_avg) }}x</td>
+          <td style="color:{% if opt.oi_change > 0 %}var(--phosphor){% else %}var(--danger){% endif %}">{{ "%+d" | format(opt.oi_change) }}</td>
+          <td>&#8377;{{ "%.1f" | format(opt.premium) }}</td>
+          <td><span class="tag tag-{% if opt.signal|lower == 'bullish' %}g{% elif opt.signal|lower == 'bearish' %}r{% else %}a{% endif %}">{{ opt.signal }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {% if options_summary %}
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;padding:14px 16px;background:var(--surface);border-radius:8px;border-left:2px solid var(--ice)">{{ options_summary | safe }}</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S07 — CORRELATION MATRIX ═══════════════════════ -->
+<div class="sect fade-up fade-up-5">
+  <div class="sect-head">
+    <span class="sect-num">S07</span>
+    <span class="sect-title">Correlation <em>Matrix</em></span>
+    {% if correlation_anomalies %}<span class="sect-badge">{{ correlation_anomalies | length }} anomalies</span>{% endif %}
+  </div>
+  <div class="sect-body">
+    <div class="corr-container" id="corrHeatmap"></div>
+    {% if correlation_anomalies %}
+    <div style="margin-top:12px">
+      {% for anomaly in correlation_anomalies %}
+      <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-secondary);padding:8px 12px;background:var(--surface);border-radius:6px;margin-bottom:6px">
+        <div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:{% if anomaly.z_score > 0 %}var(--phosphor){% else %}var(--danger){% endif %}"></div>
+        <span><strong style="color:var(--text-primary)">{{ anomaly.asset_pair }}</strong> &mdash; {{ anomaly.interpretation }} (z={{ "%.1f" | format(anomaly.z_score) }})</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S08 — BLOCK DEALS ═══════════════════════ -->
+<div class="sect fade-up fade-up-5">
+  <div class="sect-head">
+    <span class="sect-num">S08</span>
+    <span class="sect-title">Block &amp; Bulk <em>Deals</em></span>
+    {% if block_deals %}<span class="sect-badge">{{ block_deals | length }} deals</span>{% endif %}
+  </div>
+  <div class="sect-body">
+    {% if block_deals %}
+    <div class="block-grid">
+      {% for deal in block_deals %}
+      <div class="block-item">
+        <div>
+          <div class="b-ticker">{{ deal.ticker }}</div>
+          <div class="b-detail">{{ deal.get("buyer_seller", "") or deal.get("description", "") }}{% if deal.quantity %} &mdash; {{ (deal.quantity / 100000) | round(1) }}L shares at &#8377;{{ "{:,.0f}".format(deal.price) }}{% endif %}</div>
+        </div>
+        <div class="b-type">{{ deal.deal_type }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:24px;color:var(--text-dim);font-family:var(--mono);font-size:12px">No significant block/bulk deals yesterday.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S09 — GAP STATISTICS ═══════════════════════ -->
+<div class="sect fade-up fade-up-5">
+  <div class="sect-head">
+    <span class="sect-num">S09</span>
+    <span class="sect-title">Gap <em>Statistics</em></span>
+  </div>
+  <div class="sect-body">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div class="gap-stat-panel">
+        <div class="exp-lbl">Expected Gap</div>
+        <div class="exp-val" style="color:{% if gap_stats.expected_gap_pct >= 0 %}var(--phosphor){% else %}var(--danger){% endif %}">{% if gap_stats.expected_gap_pct >= 0 %}+{% endif %}{{ "%.1f" | format(gap_stats.expected_gap_pct) }}%</div>
+      </div>
+      <div class="gap-stat-panel">
+        <div class="exp-lbl">Category</div>
+        <div class="exp-val" style="color:var(--ice)">{{ gap_stats.gap_category }}</div>
+      </div>
+      <div class="gap-stat-panel">
+        <div class="exp-lbl">Sustain Prob</div>
+        <div class="exp-val" style="color:var(--phosphor)">{{ "%.0f" | format(gap_stats.final_sustain_prob * 100) }}%</div>
+      </div>
+    </div>
+    <div class="gap-stats-grid">
+      <div class="chart-wrap" style="height:220px"><canvas id="gapSizeChart"></canvas></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="gapExpiryChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ S10 — SENTIMENT ═══════════════════════ -->
+<div class="sect fade-up fade-up-5">
+  <div class="sect-head">
+    <span class="sect-num">S10</span>
+    <span class="sect-title">Sentiment &amp; <em>Analyst Calls</em></span>
+  </div>
+  <div class="sect-body">
+    <div class="senti-grid">
+      <!-- Social Panel -->
+      <div class="senti-panel">
+        <h4>Social Sentiment</h4>
+        {% if social_sentiment %}
+        {% for item in social_sentiment %}
+        <div class="si">
+          <span class="si-name">{{ item.get("hashtag", item.get("ticker", "")) }}</span>
+          <span>
+            {% set score = item.get("score", 0) %}
+            {% if score > 0.3 %}
+            <span style="color:var(--phosphor)">Bullish ({{ "%.0f" | format(score * 100) }})</span>
+            {% elif score < -0.3 %}
+            <span style="color:var(--danger)">Bearish ({{ "%.0f" | format(score * 100) }})</span>
+            {% else %}
+            <span style="color:var(--amber)">Neutral ({{ "%.0f" | format(score * 100) }})</span>
+            {% endif %}
+          </span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="color:var(--text-dim);font-family:var(--mono);font-size:11px;text-align:center;padding:12px">No social data available.</div>
+        {% endif %}
+      </div>
+
+      <!-- TV Analyst Panel -->
+      <div class="senti-panel">
+        <h4>TV Analyst Calls</h4>
+        {% if tv_analyst_calls %}
+        {% for call in tv_analyst_calls %}
+        <div class="tv-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span class="tv-analyst">{{ call.analyst }}</span>
+            <span class="tv-call" style="{% if call.direction|lower in ['buy'] %}background:var(--phosphor-dim);color:var(--phosphor){% elif call.direction|lower in ['sell','short'] %}background:var(--danger-dim);color:var(--danger){% else %}background:var(--amber-dim);color:var(--amber){% endif %}">{{ call.direction }}</span>
+          </div>
+          <div style="color:var(--text-secondary);font-size:11px">{{ call.stock }}{% if call.entry_level %} @ &#8377;{{ "%.0f" | format(call.entry_level) }}{% endif %}{% if call.target %} &rarr; &#8377;{{ "%.0f" | format(call.target) }}{% endif %}</div>
+          {% if call.conflict %}
+          <div class="tv-conflict">&#9888; {{ call.conflict }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="color:var(--text-dim);font-family:var(--mono);font-size:11px;text-align:center;padding:12px">No analyst calls tracked today.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ S11 — AVOID LIST ═══════════════════════ -->
+<div class="sect fade-up fade-up-5">
+  <div class="sect-head">
+    <span class="sect-num">S11</span>
+    <span class="sect-title">Avoid <em>List</em></span>
+    {% if avoid_list %}<span class="sect-badge" style="color:var(--danger);border-color:rgba(255,71,87,0.3)">{{ avoid_list | length }} flagged</span>{% endif %}
+  </div>
+  <div class="sect-body">
+    {% if avoid_list %}
+    <div class="avoid-list">
+      {% for item in avoid_list %}
+      <div class="avoid-item">
+        <div style="width:28px;height:28px;background:var(--danger-dim);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px">&#9888;</div>
+        <div>
+          <div class="avoid-ticker">{{ item.ticker }}</div>
+          <div class="avoid-reason">{{ item.reason }}</div>
+          <div class="avoid-flag">{{ item.flag_type }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:24px;color:var(--text-dim);font-family:var(--mono);font-size:12px">No stocks flagged for avoidance today. All clear.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S12 — EXPIRY ANALYSIS ═══════════════════════ -->
+<div class="sect fade-up fade-up-5">
+  <div class="sect-head">
+    <span class="sect-num">S12</span>
+    <span class="sect-title">Expiry <em>Analysis</em></span>
+    {% if expiry.is_expiry_week %}<span class="pill pill-amber" style="margin-left:8px">EXPIRY WEEK</span>{% endif %}
+  </div>
+  <div class="sect-body">
+    {% if expiry.is_expiry_week %}
+    <div class="exp-grid">
+      <div class="exp-card">
+        <div class="exp-lbl">Days to Expiry</div>
+        <div class="exp-val" style="color:var(--amber)">{{ expiry.days_to_expiry }}</div>
+      </div>
+      <div class="exp-card">
+        <div class="exp-lbl">Max Pain Nifty</div>
+        <div class="exp-val" style="color:var(--ice)">{{ "%.0f" | format(expiry.max_pain_nifty) }}</div>
+      </div>
+      <div class="exp-card">
+        <div class="exp-lbl">PCR Nifty</div>
+        <div class="exp-val" style="color:{% if expiry.pcr_nifty > 1.2 %}var(--phosphor){% elif expiry.pcr_nifty < 0.8 %}var(--danger){% else %}var(--amber){% endif %}">{{ "%.2f" | format(expiry.pcr_nifty) }}</div>
+      </div>
+      <div class="exp-card">
+        <div class="exp-lbl">Premium at Stake</div>
+        <div class="exp-val" style="color:var(--violet)">&#8377;{{ "%.0f" | format(expiry.total_premium_at_stake) }}Cr</div>
+      </div>
+    </div>
+    <div class="exp-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="exp-card">
+        <div class="exp-lbl">Gap Sustain Rate</div>
+        <div class="exp-val" style="color:var(--phosphor)">{{ "%.0f" | format(expiry.gap_sustain_rate) }}%</div>
+      </div>
+      <div class="exp-card">
+        <div class="exp-lbl">Gap Fill Prob</div>
+        <div class="exp-val" style="color:var(--danger)">{{ "%.0f" | format(expiry.gap_fill_probability) }}%</div>
+      </div>
+      <div class="exp-card">
+        <div class="exp-lbl">Daily Theta ATM</div>
+        <div class="exp-val" style="color:var(--amber)">&#8377;{{ "%.0f" | format(expiry.daily_theta_atm) }}</div>
+      </div>
+    </div>
+    {% if expiry.oi_strikes %}
+    <div class="chart-wrap"><canvas id="oiChart"></canvas></div>
+    {% endif %}
+    {% else %}
+    <div style="padding:16px;font-family:var(--mono);font-size:12px;color:var(--text-secondary)">
+      <div style="margin-bottom:8px">Next expiry: <strong style="color:var(--text-primary)">{{ expiry.next_expiry_date }}</strong> ({{ expiry.days_to_expiry }} days away)</div>
+      <div>Max Pain Nifty: <strong style="color:var(--ice)">{{ "%.0f" | format(expiry.max_pain_nifty) }}</strong> &bull; Max Pain BankNifty: <strong style="color:var(--ice)">{{ "%.0f" | format(expiry.max_pain_banknifty) }}</strong></div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S13 — FII/DII FLOWS ═══════════════════════ -->
+<div class="sect fade-up fade-up-5">
+  <div class="sect-head">
+    <span class="sect-num">S13</span>
+    <span class="sect-title">FII / DII <em>Flows</em></span>
+  </div>
+  <div class="sect-body">
+    <div class="flow-row">
+      <div class="flow-card">
+        <div class="fc-label">FII Today</div>
+        <div class="fc-value" style="color:{% if fii_dii_summary.fii_today_val is defined and fii_dii_summary.fii_today_val >= 0 %}var(--phosphor){% else %}var(--danger){% endif %}">{{ fii_dii_summary.fii_today }}</div>
+      </div>
+      <div class="flow-card">
+        <div class="fc-label">DII Today</div>
+        <div class="fc-value" style="color:{% if fii_dii_summary.dii_today_val is defined and fii_dii_summary.dii_today_val >= 0 %}var(--phosphor){% else %}var(--danger){% endif %}">{{ fii_dii_summary.dii_today }}</div>
+      </div>
+      <div class="flow-card">
+        <div class="fc-label">FII 5-Day</div>
+        <div class="fc-value" style="color:var(--ice)">{{ fii_dii_summary.fii_5d }}</div>
+      </div>
+      <div class="flow-card">
+        <div class="fc-label">DII 5-Day</div>
+        <div class="fc-value" style="color:var(--violet)">{{ fii_dii_summary.dii_5d }}</div>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="fiiChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ S14 — SCENARIOS ═══════════════════════ -->
+<div class="sect fade-up fade-up-5">
+  <div class="sect-head">
+    <span class="sect-num">S14</span>
+    <span class="sect-title">Scenario <em>Playbook</em></span>
+  </div>
+  <div class="sect-body">
+    {% if scenarios %}
+    <div class="scenario-cards">
+      {% for sc in scenarios %}
+      <div class="scenario" style="border-top-color:{{ sc.color }}">
+        <div class="scenario-label" style="color:{{ sc.color }}">{{ sc.label }}</div>
+        <div class="scenario-prob">{{ sc.probability }}</div>
+        <div class="scenario-desc">
+          <div class="sc-lbl">Trigger</div>
+          <div class="sc-txt">{{ sc.trigger | safe }}</div>
+        </div>
+        <div class="scenario-actions">
+          <div class="sc-lbl">Actions</div>
+          <div class="sc-txt">{{ sc.actions | safe }}</div>
+        </div>
+        <div class="scenario-desc">
+          <div class="sc-lbl">Exit</div>
+          <div class="sc-txt">{{ sc.exit | safe }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:24px;color:var(--text-dim);font-family:var(--mono);font-size:12px">AI scenario generation unavailable. Use levels and gap stats for manual planning.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S15 — WATCHLIST ═══════════════════════ -->
+<div class="sect fade-up fade-up-5">
+  <div class="sect-head">
+    <span class="sect-num">S15</span>
+    <span class="sect-title">Intraday <em>Watchlist</em></span>
+    {% if watchlist_alerts %}<span class="sect-badge">{{ watchlist_alerts | length }} alerts</span>{% endif %}
+  </div>
+  <div class="sect-body">
+    {% if watchlist_alerts %}
+    <div class="wq-timeline">
+      {% for alert in watchlist_alerts %}
+      <div class="wq-item {{ alert.priority }}">
+        <div class="wq-time">{{ alert.time }}</div>
+        <div class="wq-dot"></div>
+        <div class="wq-content">
+          <div class="wq-title">{{ alert.title }}</div>
+          <div class="wq-desc">{{ alert.content | safe }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:24px;color:var(--text-dim);font-family:var(--mono);font-size:12px">No time-sequenced alerts generated.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S16 — EVENTS CALENDAR ═══════════════════════ -->
+<div class="sect fade-up fade-up-5">
+  <div class="sect-head">
+    <span class="sect-num">S16</span>
+    <span class="sect-title">Events <em>Calendar</em></span>
+  </div>
+  <div class="sect-body">
+    {% if events_calendar %}
+    <div class="ev-timeline">
+      {% for event in events_calendar %}
+      <div class="ev-item {% if event.severity == 'hi' %}hi{% elif event.severity == 'med' %}med{% endif %}">
+        <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--ice);background:var(--ice-dim);padding:3px 8px;border-radius:4px;white-space:nowrap;flex-shrink:0">{{ event.day }}</div>
+        <div class="ev-time">{{ event.time }}</div>
+        <div class="ev-text">
+          <div class="ev-title">{{ event.title }}</div>
+          {% if event.description %}<div class="ev-desc">{{ event.description }}</div>{% endif %}
+        </div>
+        {% if event.severity %}<div style="font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;flex-shrink:0;{% if event.severity == 'hi' %}background:var(--danger-dim);color:var(--danger){% elif event.severity == 'med' %}background:var(--amber-dim);color:var(--amber){% endif %}">{{ event.severity | upper }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:24px;color:var(--text-dim);font-family:var(--mono);font-size:12px">No significant events this week.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════ S17 — RISK SIZING ═══════════════════════ -->
+<div class="sect fade-up fade-up-5">
+  <div class="sect-head">
+    <span class="sect-num">S17</span>
+    <span class="sect-title">Risk <em>Sizing</em></span>
+  </div>
+  <div class="sect-body">
+    <div class="risk-row">
+      <div class="risk-cell">
+        <div class="risk-l">Max Risk / Trade</div>
+        <div class="risk-v" style="color:var(--danger)">&#8377;{{ "{:,.0f}".format(risk.max_risk_per_trade) }}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-secondary);margin-top:2px">{{ risk.max_risk_text }}</div>
+      </div>
+      <div class="risk-cell">
+        <div class="risk-l">Nifty ATR(14)</div>
+        <div class="risk-v" style="color:var(--amber)">{{ "%.0f" | format(risk.nifty_atr) }}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-secondary);margin-top:2px">{{ risk.nifty_atr_text }}</div>
+      </div>
+      <div class="risk-cell">
+        <div class="risk-l">Rec. Lots</div>
+        <div class="risk-v" style="color:var(--phosphor)">{{ risk.recommended_lots }}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-secondary);margin-top:2px">{{ risk.recommended_lots_text }}</div>
+      </div>
+      <div class="risk-cell">
+        <div class="risk-l">Expiry Adj.</div>
+        <div class="risk-v" style="color:var(--violet)">{{ "%.2f" | format(risk.expiry_adj_factor) }}x</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-secondary);margin-top:2px">{{ risk.expiry_adj_text }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /.main -->
+
+<!-- ═══════════════════════ FOOTER ═══════════════════════ -->
+<footer class="report-footer fade-up">
+  <div class="rf-brand">Alpha Edge</div>
+  <div class="rf-stats">
+    <span>Sections: {{ sections_ok }}/17 OK{% if sections_degraded > 0 %}, {{ sections_degraded }} degraded{% endif %}</span>
+    <span>Pipeline: {{ "%.1f" | format(pipeline_duration) }}s</span>
+    <span>Patterns: {{ pattern_match_count }} matched</span>
+    <span>Contagion chains: {{ contagion_chain_count }}</span>
+    <span>Correlation anomalies: {{ correlation_anomaly_count }}</span>
+    <span>Generated: {{ generated_at }}</span>
+  </div>
+</footer>
+
+<!-- ═══════════════════════ CHART.JS SCRIPTS ═══════════════════════ -->
+<script>
+(function(){
+  const CD = {{ chart_data | tojson }};
+
+  // ── Helper: create chart from config dict ──
+  function makeChart(cfg) {
+    const el = document.getElementById(cfg.canvas_id);
+    if (!el) return;
+    new Chart(el.getContext('2d'), {
+      type: cfg.type,
+      data: cfg.data,
+      options: cfg.options
+    });
+  }
+
+  // ── Sparklines (sp1-sp6) ──
+  if (CD.sparklines) {
+    CD.sparklines.forEach(function(sp) { makeChart(sp); });
+  }
+
+  // ── Sector Rotation (sectorChart) ──
+  if (CD.sector_chart) {
+    var sc = CD.sector_chart;
+    if (sc.options && sc.options.plugins && sc.options.plugins.tooltip) {
+      sc.options.plugins.tooltip.callbacks = {
+        label: function(ctx) { return ctx.parsed.x >= 0 ? '+' + ctx.parsed.x + ' Cr' : ctx.parsed.x + ' Cr'; }
+      };
+    }
+    makeChart(sc);
+  }
+
+  // ── Contagion Impact (contagionChart) ──
+  if (CD.contagion_chart) { makeChart(CD.contagion_chart); }
+
+  // ── Gap Size Analysis (gapSizeChart) ──
+  if (CD.gap_size_chart) {
+    var gs = CD.gap_size_chart;
+    if (gs.options && gs.options.scales && gs.options.scales.y && gs.options.scales.y.ticks) {
+      gs.options.scales.y.ticks.callback = function(v) { return v + '%'; };
+    }
+    makeChart(gs);
+  }
+
+  // ── Gap Expiry Doughnut (gapExpiryChart) ──
+  if (CD.gap_expiry_chart) { makeChart(CD.gap_expiry_chart); }
+
+  // ── Nifty OI by Strike (oiChart) ──
+  if (CD.oi_chart) {
+    var oi = CD.oi_chart;
+    if (oi.options && oi.options.scales && oi.options.scales.y && oi.options.scales.y.ticks) {
+      oi.options.scales.y.ticks.callback = function(v) { return (v / 100000).toFixed(1) + 'L'; };
+    }
+    makeChart(oi);
+  }
+
+  // ── FII vs DII Flow (fiiChart) ──
+  if (CD.fii_chart) {
+    var fc = CD.fii_chart;
+    if (fc.options && fc.options.plugins && fc.options.plugins.tooltip) {
+      fc.options.plugins.tooltip.callbacks = {
+        label: function(ctx) { return ctx.dataset.label + ': ' + (ctx.parsed.y >= 0 ? '+' : '') + ctx.parsed.y + ' Cr'; }
+      };
+    }
+    if (fc.options && fc.options.scales && fc.options.scales.y && fc.options.scales.y.ticks) {
+      fc.options.scales.y.ticks.callback = function(v) { return v + ' Cr'; };
+    }
+    makeChart(fc);
+  }
+
+  // ── Correlation Heatmap (JS-generated from data) ──
+  var corrAssets = {{ correlation_assets | tojson }};
+  var corrMatrix = {{ correlation_matrix | tojson }};
+
+  if (corrAssets.length > 0 && corrMatrix.length > 0) {
+    var wrap = document.getElementById('corrHeatmap');
+    if (wrap) {
+      var tbl = '<table class="corr-table"><tr><th></th>';
+      corrAssets.forEach(function(a) { tbl += '<th>' + a + '</th>'; });
+      tbl += '</tr>';
+      for (var i = 0; i < corrAssets.length; i++) {
+        tbl += '<tr><th style="text-align:right;padding-right:8px">' + corrAssets[i] + '</th>';
+        for (var j = 0; j < corrAssets.length; j++) {
+          var v = corrMatrix[i][j];
+          var r, g, b, a;
+          if (v >= 0) {
+            r = Math.round(0 + (1 - v) * 21);
+            g = Math.round(232 * v + 30 * (1 - v));
+            b = Math.round(123 * v + 40 * (1 - v));
+            a = 0.15 + Math.abs(v) * 0.6;
+          } else {
+            r = Math.round(255 * Math.abs(v) + 21 * (1 - Math.abs(v)));
+            g = Math.round(71 * Math.abs(v) + 30 * (1 - Math.abs(v)));
+            b = Math.round(87 * Math.abs(v) + 40 * (1 - Math.abs(v)));
+            a = 0.15 + Math.abs(v) * 0.6;
+          }
+          var bg = 'rgba(' + r + ',' + g + ',' + b + ',' + a.toFixed(2) + ')';
+          var txt = i === j ? '1.00' : v.toFixed(2);
+          tbl += '<td style="background:' + bg + ';color:' + (Math.abs(v) > 0.5 ? '#E8ECF4' : '#8892A8') + '">' + txt + '</td>';
+        }
+        tbl += '</tr>';
+      }
+      tbl += '</table>';
+      wrap.innerHTML = tbl;
+    }
+  }
+
+})();
+</script>
+</body>
+</html>

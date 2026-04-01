@@ -1,0 +1,39 @@
+# Core
+fastapi
+uvicorn
+langchain
+langchain-groq
+langgraph
+
+# Data Collection
+yfinance
+nsetools
+requests
+beautifulsoup4
+feedparser
+httpx
+aiohttp
+
+# Feature Engineering
+pandas
+numpy
+pandas-ta
+scipy
+scikit-learn
+
+# Report Generation
+jinja2
+
+# Storage
+# sqlite3 is built-in
+
+# Config & Utils
+pydantic
+pydantic-settings
+python-dotenv
+loguru
+tenacity
+rich
+
+weasyprint
+tweepy
